@@ -1,16 +1,18 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Autofac.Extras.DynamicProxy;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using NCapIntegration.Attributes;
 using NCapIntegration.EventBus;
 using NCapIntegration.HostService;
 using NCapIntegration.Interceptors;
-using NCapIntegration.Persistence;
-using NCapIntegration.Persistence.Uow;
+using NCapIntegration.Persistence.MongoDB;
+using NCapIntegration.Persistence.MSSql;
+using NCapIntegration.Persistence.MSSql.Uow;
+using NCapIntegration.Pipeline;
 using NCapIntegration.Services;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 namespace NCapIntegration
 {
@@ -24,25 +26,32 @@ namespace NCapIntegration
         static async Task Main(string[] args)
         {
             HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
-            builder.ConfigureContainer<ContainerBuilder>(new AutofacServiceProviderFactory(), builder =>
+            builder.ConfigureContainer(new AutofacServiceProviderFactory(), builder =>
             {
+                //注册mongodb
+                builder.AddMongoDb(); 
+                //注册写入日志channel
+                builder.RegisterType<OperateLoggerChannel>().SingleInstance();
                 //注册拦截器以及service
                 builder.RegisterType<UowAsyncInterceptor>().AsSelf();
                 builder.RegisterType<AsyncInterceptorAdaper<UowAsyncInterceptor>>().AsSelf();
+                builder.RegisterType<OperateLogAsyncInterceptor>().AsSelf();
+                builder.RegisterType<AsyncInterceptorAdaper<OperateLogAsyncInterceptor>>().AsSelf();
                 builder.RegisterType<StudentService>().AsImplementedInterfaces()
                 .EnableInterfaceInterceptors()
-                .InterceptedBy(typeof(AsyncInterceptorAdaper<UowAsyncInterceptor>));
+                .InterceptedBy(typeof(AsyncInterceptorAdaper<OperateLogAsyncInterceptor>), typeof(AsyncInterceptorAdaper<UowAsyncInterceptor>));
             });
 
             //注册数据库和工作单元
-            builder.Services.AddScoped<IUnitOfWork, MssqlUnitOfWork<DemoDbContext>>();
-            builder.Services.AddDbContext<DemoDbContext>(options =>
+            builder.Services.AddScoped<IUnitOfWork, MssqlUnitOfWork<NCapIntegrationDbContext>>();
+            builder.Services.AddDbContext<NCapIntegrationDbContext>(options =>
             {
                 options.UseSqlServer(mssqlConStr, action =>
                 {
-                    action.MigrationsAssembly(typeof(DemoDbContext).Assembly.FullName);
+                    action.MigrationsAssembly(typeof(NCapIntegrationDbContext).Assembly.FullName);
                 });
             });
+
 
             //注册cap
             builder.Services.AddSingleton<IEventPublisher, CapPublisher>()

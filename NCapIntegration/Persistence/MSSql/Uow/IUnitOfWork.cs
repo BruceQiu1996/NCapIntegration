@@ -1,6 +1,6 @@
 ﻿using System.Data;
 
-namespace NCapIntegration.Persistence.Uow
+namespace NCapIntegration.Persistence.MSSql.Uow
 {
     public interface IUnitOfWork : IDisposable
     {

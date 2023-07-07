@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Data;
 
-namespace NCapIntegration.Persistence.Uow
+namespace NCapIntegration.Persistence.MSSql.Uow
 {
     /// <summary>
     /// TODO:可以为不同的数据库声明一个不同的dbcontext基类用以区分和约束。

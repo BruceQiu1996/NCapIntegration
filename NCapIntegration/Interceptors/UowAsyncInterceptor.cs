@@ -1,6 +1,6 @@
 ﻿using Castle.DynamicProxy;
 using NCapIntegration.Interceptors.Attributes;
-using NCapIntegration.Persistence.Uow;
+using NCapIntegration.Persistence.MSSql.Uow;
 using System.Reflection;
 
 namespace NCapIntegration.Attributes

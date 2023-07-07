@@ -1,16 +1,16 @@
 ﻿using NCapIntegration.Entities;
 using NCapIntegration.EventBus;
 using NCapIntegration.EventBus.Events;
-using NCapIntegration.Persistence;
+using NCapIntegration.Persistence.MSSql;
 
 namespace NCapIntegration.Services
 {
     public class StudentService : IStudentService
     {
-        private readonly DemoDbContext _demoDbContext;
+        private readonly NCapIntegrationDbContext _demoDbContext;
         private readonly IEventPublisher _eventPublisher;
 
-        public StudentService(DemoDbContext demoDbContext, IEventPublisher eventPublisher)
+        public StudentService(NCapIntegrationDbContext demoDbContext, IEventPublisher eventPublisher)
         {
             _demoDbContext = demoDbContext;
             _eventPublisher = eventPublisher;

@@ -5,6 +5,7 @@ namespace NCapIntegration.Services
 {
     public interface IStudentService
     {
+        [OperateLog]
         [Uow(Distribute = true)]
         Task InsertStudentAsync();
 

@@ -2,12 +2,12 @@
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Data;
 
-namespace NCapIntegration.Persistence.Uow
+namespace NCapIntegration.Persistence.MSSql.Uow
 {
     public abstract class UnitOfWork<TDbContext> : IUnitOfWork where TDbContext : DbContext
     {
         protected readonly TDbContext _dbContext;
-        protected IDbContextTransaction? DbTransaction { get; private set; }
+        protected IDbContextTransaction DbTransaction { get; private set; }
 
         public UnitOfWork(TDbContext dbContext)
         {
