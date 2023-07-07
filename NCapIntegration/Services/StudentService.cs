@@ -52,7 +52,7 @@ namespace NCapIntegration.Services
         public async Task ProcessInsertStudentEventAsync(StudentCreatedEvent @event)
         {
             //throw new Exception("error");
-            Console.WriteLine($"{@event.Id}--{@event.Data.Id}--{@event.Data.Age}");
+            Console.WriteLine($"receive a new StudentCreatedEvent : {@event.Id}--{@event.Data.Id}--{@event.Data.Age}");
 
             await Task.CompletedTask;
         }

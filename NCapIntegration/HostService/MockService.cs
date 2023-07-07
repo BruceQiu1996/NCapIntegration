@@ -12,13 +12,13 @@ namespace NCapIntegration.HostService
             _studentService = studentService;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
             Console.Clear();
             Console.WriteLine("MockService is starting-----------------");
-            _studentService.InsertStudentAsync();
-
-            return Task.CompletedTask;
+            await _studentService.InsertStudentAsync();
+            await _studentService.InsertStudentAsync();
+            await _studentService.InsertStudentAsync();
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
