@@ -12,3 +12,6 @@ Do you encounter open source projects that are heavy, with many projects for one
 - [x] 优雅的EFCore集成
 - [ ] 基于SkyAPM的性能追踪
 - [ ] 优雅的GRpc集成
+
+- CAP : https://github.com/dotnetcore/CAP
+- IPRateLimit : https://github.com/stefanprodan/AspNetCoreRateLimit
