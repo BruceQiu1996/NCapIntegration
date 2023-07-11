@@ -5,13 +5,23 @@ namespace NCapIntegration.Persistence.MSSql
 {
     public class NCapIntegrationDbContext : DbContext
     {
-        public NCapIntegrationDbContext(DbContextOptions options) : base(options)
+        private readonly EFEntitiesInfo _efEntitysInfo;
+
+        public NCapIntegrationDbContext(DbContextOptions options,EFEntitiesInfo entitiesInfo) : base(options)
         {
             Database.AutoTransactionBehavior = AutoTransactionBehavior.Never;
+            _efEntitysInfo = entitiesInfo;
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            var (Assembly, Types) = _efEntitysInfo.GetEFEntitiesAndAssembly();
+            foreach (var entityType in Types)
+            {
+                modelBuilder.Entity(entityType);
+            }
+            //只需要将配置类所在的程序集给到，它会自动加载
+            modelBuilder.ApplyConfigurationsFromAssembly(Assembly);
             base.OnModelCreating(modelBuilder);
         }
 
@@ -33,7 +43,5 @@ namespace NCapIntegration.Persistence.MSSql
 
             return result;
         }
-
-        public DbSet<Student> Students { get; set; }
     }
 }

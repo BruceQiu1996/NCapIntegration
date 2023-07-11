@@ -22,5 +22,14 @@ namespace NCapIntegration.EventBus
 
             await Task.CompletedTask;
         }
+
+        [Uow]
+        [CapSubscribe(nameof(StudentDeletedEvent))]
+        public async Task OnStudentDeletedEventTrigger(StudentDeletedEvent @event)
+        {
+            await _studentService.ProcessDeleteStudentEventAsync(@event);
+
+            await Task.CompletedTask;
+        }
     }
 }

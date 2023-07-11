@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using NCapIntegration.Attributes;
+using NCapIntegration.Entities;
 using NCapIntegration.EventBus;
 using NCapIntegration.Interceptors;
 using NCapIntegration.IPRateLimit;
@@ -73,6 +74,7 @@ namespace NCapIntegration
             builder.Configuration.AddJsonFile("IPRateLimit/IPRateLimit.json", optional: false, reloadOnChange: true);
 
             //注册数据库和工作单元
+            builder.Services.AddSingleton<EFEntitiesInfo>();
             builder.Services.AddScoped<IUnitOfWork, MssqlUnitOfWork<NCapIntegrationDbContext>>();
             builder.Services.AddDbContext<NCapIntegrationDbContext>(options =>
             {

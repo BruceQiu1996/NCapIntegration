@@ -11,7 +11,7 @@
     ],
     "GeneralRules": [
       {
-        "Endpoint": "*:/api/main",
+        "Endpoint": "*:/api/students",
         "Period": "1m",
         "Limit": 10
       }

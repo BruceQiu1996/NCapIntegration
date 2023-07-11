@@ -8,11 +8,11 @@ namespace NCapIntegration.Controllers
     /// </summary>
     [Route("api/[controller]")]
     [ApiController]
-    public class MainController : ControllerBase
+    public class StudentsController : ControllerBase
     {
         private readonly IStudentService _studentService;
 
-        public MainController(IStudentService studentService)
+        public StudentsController(IStudentService studentService)
         {
             _studentService = studentService;
         }
@@ -29,12 +29,29 @@ namespace NCapIntegration.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// 查询所有学生
+        /// </summary>
+        /// <returns>执行结果</returns>
         [ApiExplorerSettings(GroupName = "v1")]
         [HttpGet]
         public async Task<IActionResult> Get()
         {
             var stus = await _studentService.GetAllStudentsAsync();
             return Ok(stus);
+        }
+
+        /// <summary>
+        /// 查询所有学生
+        /// </summary>
+        /// <returns>执行结果</returns>
+        [ApiExplorerSettings(GroupName = "v1")]
+        [HttpDelete]
+        [Route("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await _studentService.DeleteStudentAsync(id);
+            return Ok();
         }
 
         [ApiExplorerSettings(GroupName = "v2")]
