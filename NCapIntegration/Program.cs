@@ -1,13 +1,16 @@
-﻿using Autofac;
+﻿using AspNetCoreRateLimit;
+using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Autofac.Extras.DynamicProxy;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Microsoft.OpenApi.Models;
 using NCapIntegration.Attributes;
 using NCapIntegration.EventBus;
-using NCapIntegration.HostService;
 using NCapIntegration.Interceptors;
+using NCapIntegration.IPRateLimit;
 using NCapIntegration.Persistence.MongoDB;
 using NCapIntegration.Persistence.MSSql;
 using NCapIntegration.Persistence.MSSql.Uow;
@@ -22,25 +25,52 @@ namespace NCapIntegration
         /// sql server数据库连接字符串
         /// </summary>
         private static readonly string mssqlConStr = "server=127.0.0.1;uid=sa;pwd=123456;database=NCapIntegration;Encrypt=True;TrustServerCertificate=True;Connection Timeout=300;";
-        
+
         static async Task Main(string[] args)
         {
-            HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
-            builder.ConfigureContainer(new AutofacServiceProviderFactory(), builder =>
+            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+            var builder = WebApplication.CreateBuilder(args);
+            builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory()).ConfigureContainer<ContainerBuilder>((hcontext, builder) =>
             {
                 //注册mongodb
-                builder.AddMongoDb(); 
-                //注册写入日志channel
+                builder.AddMongoDb();
+                //注册写入操作日志到mongodb的channel
                 builder.RegisterType<OperateLoggerChannel>().SingleInstance();
                 //注册拦截器以及service
                 builder.RegisterType<UowAsyncInterceptor>().AsSelf();
                 builder.RegisterType<AsyncInterceptorAdaper<UowAsyncInterceptor>>().AsSelf();
                 builder.RegisterType<OperateLogAsyncInterceptor>().AsSelf();
                 builder.RegisterType<AsyncInterceptorAdaper<OperateLogAsyncInterceptor>>().AsSelf();
-                builder.RegisterType<StudentService>().AsImplementedInterfaces()
-                .EnableInterfaceInterceptors()
+                //添加日志和工作单元拦截器到业务service层
+                builder.RegisterType<StudentService>().AsImplementedInterfaces().EnableInterfaceInterceptors()
                 .InterceptedBy(typeof(AsyncInterceptorAdaper<OperateLogAsyncInterceptor>), typeof(AsyncInterceptorAdaper<UowAsyncInterceptor>));
             });
+
+            builder.Host.ConfigureServices((hostContext, services) =>
+            {
+                services.AddMemoryCache();
+                services.AddIPRateLimit(hostContext.Configuration); //使用ip限流
+                services.AddControllers();
+                services.AddEndpointsApiExplorer();
+                services.AddSwaggerGen(options =>
+                {
+                    options.SwaggerDoc("v1", new OpenApiInfo
+                    {
+                        Version = "v1",
+                        Title = "v1版集成接口",
+                        Description = "v1版集成接口"
+                    });
+
+                    options.SwaggerDoc("v2", new OpenApiInfo
+                    {
+                        Version = "v2",
+                        Title = "v2版集成接口",
+                        Description = "v2版集成接口"
+                    });
+                });
+            });
+            
+            builder.Configuration.AddJsonFile("IPRateLimit/IPRateLimit.json", optional: false, reloadOnChange: true);
 
             //注册数据库和工作单元
             builder.Services.AddScoped<IUnitOfWork, MssqlUnitOfWork<NCapIntegrationDbContext>>();
@@ -51,7 +81,6 @@ namespace NCapIntegration
                     action.MigrationsAssembly(typeof(NCapIntegrationDbContext).Assembly.FullName);
                 });
             });
-
 
             //注册cap
             builder.Services.AddSingleton<IEventPublisher, CapPublisher>()
@@ -100,8 +129,22 @@ namespace NCapIntegration
                 });
             });
 
-            builder.Services.AddHostedService<MockService>();
-            IHost host = builder.Build();
+            //middleware
+            var host = builder.Build();
+            using (var scope = host.Services.CreateScope())
+            {
+                await scope.ServiceProvider.GetRequiredService<IIpPolicyStore>().SeedAsync();
+            }
+            host.UseRouting();
+            host.UseIpRateLimiting();
+            host.UseSwagger();
+            host.UseSwaggerUI(option =>
+            {
+                option.SwaggerEndpoint($"/swagger/v1/swagger.json", "v1");
+                option.SwaggerEndpoint($"/swagger/v2/swagger.json", "v2");
+            });
+            host.MapControllers();
+
             await host.RunAsync();
         }
     }

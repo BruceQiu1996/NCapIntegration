@@ -1,4 +1,5 @@
-﻿using NCapIntegration.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using NCapIntegration.Entities;
 using NCapIntegration.EventBus;
 using NCapIntegration.EventBus.Events;
 using NCapIntegration.Persistence.MSSql;
@@ -16,10 +17,15 @@ namespace NCapIntegration.Services
             _eventPublisher = eventPublisher;
         }
 
+        public async Task<IEnumerable<Student>> GetAllStudentsAsync()
+        {
+            return await _demoDbContext.Students.ToListAsync();
+        }
+
         /// <summary>
         /// 新建一个学生
         /// </summary>
-        /// <returns></returns>
+        /// <returns>异步task</returns>
         public async Task InsertStudentAsync()
         {
             var newStudent = new Student()

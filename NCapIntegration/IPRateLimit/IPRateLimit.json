@@ -1,0 +1,51 @@
+{
+  "IpRateLimiting": {
+    "EnableEndpointRateLimiting": true, //尽量设置为false，如果为true则不会根据某些终结点路径单独设置限流规则
+    "StackBlockedRequests": false,
+    "RealIpHeader": "X-Real-IP", //如果存在负载设备或者反向代理，则X-Forwarded-For
+    "HttpStatusCode": 429, // 429 Too Many Requests
+    "IpWhitelist": [ ],//白名单，不受策略影响的白名单
+    "EndpointWhitelist": [
+      "get:/api/license",
+      "*:/api/status"
+    ],
+    "GeneralRules": [
+      {
+        "Endpoint": "*:/api/main",
+        "Period": "1m",
+        "Limit": 10
+      }
+    ],
+    "QuotaExceededResponse": {
+      "Content": "{{ \"message\": \"我知道你很急,但是你先别急,你已经被限流。限流规则: 每 {1} 只能访问 {0} 次。请 {2} 秒后再重试\"}}",
+      "ContentType": "application/json",
+      "StatusCode": 429
+    }
+  },
+  //针对特殊的处理
+  //该部分最好动态添加，在运行时，遇到爬虫或者某个ip大批量请求时，可以进行有效限制
+  "IpRateLimitPolicies": {
+    //ip规则 仅作示例
+    "IpRules": [
+      {
+        //IP
+        "Ip": "88.88.88.88", //本地测试可以使用"::1/10"
+        //规则内容
+        "Rules": [
+          //1s请求10次
+          {
+            "Endpoint": "*",
+            "Period": "1s",
+            "Limit": 10
+          },
+          //15分钟请求200次
+          {
+            "Endpoint": "*",
+            "Period": "15m",
+            "Limit": 200
+          }
+        ]
+      }
+    ]
+  }
+}
